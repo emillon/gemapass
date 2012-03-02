@@ -10,6 +10,7 @@
 # ----------------------------------------------------------------------------
 use strict;
 use warnings;
+use Digest::MD5 qw/md5_hex/;
 use MIME::Lite;
 use Template;
 
@@ -20,12 +21,19 @@ TEMPLATE
 
 my $data;
 
+my $username = 'Michel';
+my $realm = 'example.net';
+
 my $password = &generate_password(10);
-my %params = (name => 'Michel', password => $password);
+my %params = (name => $username, password => $password);
 
 my $tt = Template->new({ABSOLUTE => 1, RELATIVE => 1})
   || die Template->error(), "\n";
 $tt->process(\$template, \%params, \$data);
+
+print &htdigest_line($username, $realm, $password);
+
+print "---\n";
 
 print &build_mail ({ From => 'me@example.net',
                      To => 'you@example.net',
@@ -50,4 +58,12 @@ sub build_mail {
     my $msg = MIME::Lite->new(%$mailinfo, Data => $body);
 
     return $msg->as_string;
+}
+
+sub htdigest_line {
+  my $username = shift;
+  my $realm = shift;
+  my $password = shift;
+  my $hashed_pw = md5_hex("$username:$realm:$password");
+  return "$username:$realm:$hashed_pw\n";
 }
