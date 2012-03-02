@@ -10,3 +10,44 @@
 # ----------------------------------------------------------------------------
 use strict;
 use warnings;
+use MIME::Lite;
+use Template;
+
+my $template = <<TEMPLATE;
+Username : [% name %]
+Password : [% password %]
+TEMPLATE
+
+my $data;
+
+my $password = &generate_password(10);
+my %params = (name => 'Michel', password => $password);
+
+my $tt = Template->new({ABSOLUTE => 1, RELATIVE => 1})
+  || die Template->error(), "\n";
+$tt->process(\$template, \%params, \$data);
+
+print &build_mail ({ From => 'me@example.net',
+                     To => 'you@example.net',
+                     Subject => 'Your password',
+                   }, $data);
+
+exit;
+
+sub generate_password {
+  my $length = shift;
+  my $possible = 'abcdefghituvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  my $password = '';
+  while (length($password) < $length) {
+    $password .= substr($possible, (int(rand(length($possible)))), 1);
+  }
+  return $password
+}
+
+sub build_mail {
+    my $mailinfo = shift;
+    my $body = shift;
+    my $msg = MIME::Lite->new(%$mailinfo, Data => $body);
+
+    return $msg->as_string;
+}
