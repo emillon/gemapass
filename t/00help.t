@@ -8,5 +8,5 @@ sub launch {
 }
 
 is (0, &launch('--help'), '--help ends with no error');
-isnt (0, &launch('--nosuchoption'), '--nosuchoption ends with no error');
+isnt (0, &launch('--nosuchoption'), '--nosuchoption ends with an error');
 

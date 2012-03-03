@@ -14,6 +14,10 @@ use Digest::MD5 qw/md5_hex/;
 use Getopt::Euclid;
 use MIME::Lite;
 use Template;
+use YAML::Syck;
+
+&main();
+exit;
 
 my $template = <<TEMPLATE;
 Username : [% name %]
@@ -73,8 +77,66 @@ sub build_body {
   return $data;
 }
 
+sub main {
+  my $conf = LoadFile($ARGV{'-c'});
+
+  my $template = $conf->{'template'};
+  my $realm = $conf->{'realm'};
+  my $from = $conf->{'from'};
+  my $subject = $conf->{'subject'};
+
+  my $htpasswd_filename = 'htpasswd.out';
+  open HTPASSWD, '>', $htpasswd_filename
+    or die "Cannot open $htpasswd_filename";
+
+  my $mail_dirname = 'mail.out';
+
+  mkdir $mail_dirname
+    or die "Cannot mkdir $mail_dirname";
+
+  while (my ($username, $user) = each $conf->{'users'}) {
+    my $fullname = $user->{'fullname'};
+    my $email = $user->{'email'};
+    my $password = &generate_password(10);
+    my %params = ( username => $username,
+                   fullname => $fullname,
+                 );
+    my $body = &build_body(\$template, \%params);
+    my $msg = &build_mail({ From => $from,
+                            To => $email,
+                            Subject => $subject,
+                          }, $body);
+
+    my $hline = &htdigest_line($username, $realm, $password);
+    print HTPASSWD $hline;
+
+    my $mail_filename = "$mail_dirname/$username.mail";
+
+    open MAIL, '>', $mail_filename
+      or die "Cannot open $mail_filename : $!";
+    print MAIL $msg;
+    close MAIL
+      or die "Cannot close $mail_filename";
+  }
+
+  close HTPASSWD
+    or die "Cannot close $htpasswd_filename";
+}
+
 __END__
 
 =head1 NAME
 
 gemapass - Generate & Mail Passwords
+
+=head1 USAGE
+
+    gemapass -c conf.yml
+
+=head1 REQUIRED ARGUMENTS
+
+=over
+
+=item -c <conffile>
+
+Where to read password configuration.
