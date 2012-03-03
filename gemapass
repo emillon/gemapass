@@ -11,6 +11,7 @@
 use strict;
 use warnings;
 use Digest::MD5 qw/md5_hex/;
+use Getopt::Euclid;
 use MIME::Lite;
 use Template;
 
@@ -71,3 +72,9 @@ sub build_body {
   $tt->process($template, $params, \$data);
   return $data;
 }
+
+__END__
+
+=head1 NAME
+
+gemapass - Generate & Mail Passwords
