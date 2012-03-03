@@ -19,26 +19,19 @@ Username : [% name %]
 Password : [% password %]
 TEMPLATE
 
-my $data;
-
 my $username = 'Michel';
 my $realm = 'example.net';
 
 my $password = &generate_password(10);
 my %params = (name => $username, password => $password);
-
-my $tt = Template->new({ABSOLUTE => 1, RELATIVE => 1})
-  || die Template->error(), "\n";
-$tt->process(\$template, \%params, \$data);
+my $body = &build_body(\$template, \%params);
 
 print &htdigest_line($username, $realm, $password);
-
 print "---\n";
-
 print &build_mail ({ From => 'me@example.net',
                      To => 'you@example.net',
                      Subject => 'Your password',
-                   }, $data);
+                   }, $body);
 
 exit;
 
@@ -66,4 +59,15 @@ sub htdigest_line {
   my $password = shift;
   my $hashed_pw = md5_hex("$username:$realm:$password");
   return "$username:$realm:$hashed_pw\n";
+}
+
+sub build_body {
+  my $template = shift;
+  my $params = shift;
+
+  my $data;
+  my $tt = Template->new({ABSOLUTE => 1, RELATIVE => 1})
+  || die Template->error(), "\n";
+  $tt->process($template, $params, \$data);
+  return $data;
 }
