@@ -79,6 +79,7 @@ sub main {
     my $password = &generate_password(10);
     my %params = ( username => $username,
                    fullname => $fullname,
+                   password => $password,
                  );
     my $body = &build_body(\$template, \%params);
     my $msg = &build_mail({ From => $from,
