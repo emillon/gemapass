@@ -3,7 +3,7 @@ use warnings;
 use File::Temp qw/tempfile/;
 use Test::More tests => 4;
 
-my ($fh, $conffile)=tempfile('gemapassXXXX', UNLINK => 0);
+my ($fh, $conffile)=tempfile(UNLINK => 0);
 
 my $conf = <<'CONF';
 from: admin@example.net
