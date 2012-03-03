@@ -19,27 +19,6 @@ use YAML::Syck;
 &main();
 exit;
 
-my $template = <<TEMPLATE;
-Username : [% name %]
-Password : [% password %]
-TEMPLATE
-
-my $username = 'Michel';
-my $realm = 'example.net';
-
-my $password = &generate_password(10);
-my %params = (name => $username, password => $password);
-my $body = &build_body(\$template, \%params);
-
-print &htdigest_line($username, $realm, $password);
-print "---\n";
-print &build_mail ({ From => 'me@example.net',
-                     To => 'you@example.net',
-                     Subject => 'Your password',
-                   }, $body);
-
-exit;
-
 sub generate_password {
   my $length = shift;
   my $possible = 'abcdefghituvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
