@@ -38,16 +38,13 @@ sub build_mail {
 }
 
 sub htdigest_line {
-  my $username = shift;
-  my $realm = shift;
-  my $password = shift;
+  my ($username, $realm, $password) = @_;
   my $hashed_pw = md5_hex("$username:$realm:$password");
   return "$username:$realm:$hashed_pw\n";
 }
 
 sub build_body {
-  my $template = shift;
-  my $params = shift;
+  my ($template, $params) = @_;
 
   my $data;
   my $tt = Template->new({ABSOLUTE => 1, RELATIVE => 1})
@@ -56,14 +53,37 @@ sub build_body {
   return $data;
 }
 
-sub main {
-  my $conf = LoadFile($ARGV{'-c'});
+sub write_mail {
+  my ($conf, $mail_dirname, $username, $user) = @_;
 
   my $template = $conf->{'template'};
-  my $realm = $conf->{'realm'};
-  my $from = $conf->{'from'};
-  my $subject = $conf->{'subject'};
-  my $bcc = $conf->{'bcc'};
+
+  my $password = &generate_password(10);
+  my %params = ( username => $username,
+                 fullname => $user->{'fullname'},
+                 password => $password,
+               );
+  my $body = &build_body(\$template, \%params);
+  my $msg = &build_mail({ From => $conf->{'from'},
+                          To => $user->{'email'},
+                          Subject => $conf->{'subject'},
+                          Bcc => $conf->{'bcc'},
+                        }, $body);
+
+  my $hline = &htdigest_line($username, $conf->{'realm'}, $password);
+  print HTPASSWD $hline;
+
+  my $mail_filename = "$mail_dirname/$username.mail";
+
+  open MAIL, '>', $mail_filename
+    or die "Cannot open $mail_filename : $!";
+  print MAIL $msg;
+  close MAIL
+    or die "Cannot close $mail_filename";
+}
+
+sub main {
+  my $conf = LoadFile($ARGV{'-c'});
 
   my $htpasswd_filename = 'htpasswd.out';
   open HTPASSWD, '>', $htpasswd_filename
@@ -75,30 +95,7 @@ sub main {
     or die "Cannot mkdir $mail_dirname";
 
   while (my ($username, $user) = each $conf->{'users'}) {
-    my $fullname = $user->{'fullname'};
-    my $email = $user->{'email'};
-    my $password = &generate_password(10);
-    my %params = ( username => $username,
-                   fullname => $fullname,
-                   password => $password,
-                 );
-    my $body = &build_body(\$template, \%params);
-    my $msg = &build_mail({ From => $from,
-                            To => $email,
-                            Subject => $subject,
-                            Bcc => $bcc,
-                          }, $body);
-
-    my $hline = &htdigest_line($username, $realm, $password);
-    print HTPASSWD $hline;
-
-    my $mail_filename = "$mail_dirname/$username.mail";
-
-    open MAIL, '>', $mail_filename
-      or die "Cannot open $mail_filename : $!";
-    print MAIL $msg;
-    close MAIL
-      or die "Cannot close $mail_filename";
+    &write_mail($conf, $mail_dirname, $username, $user);
   }
 
   close HTPASSWD
