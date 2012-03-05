@@ -63,6 +63,7 @@ sub main {
   my $realm = $conf->{'realm'};
   my $from = $conf->{'from'};
   my $subject = $conf->{'subject'};
+  my $bcc = $conf->{'bcc'};
 
   my $htpasswd_filename = 'htpasswd.out';
   open HTPASSWD, '>', $htpasswd_filename
@@ -85,6 +86,7 @@ sub main {
     my $msg = &build_mail({ From => $from,
                             To => $email,
                             Subject => $subject,
+                            Bcc => $bcc,
                           }, $body);
 
     my $hline = &htdigest_line($username, $realm, $password);
