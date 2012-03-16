@@ -120,6 +120,8 @@ gemapass - Generate & Mail Passwords
 
 Where to read password configuration.
 
+=back
+
 =head1 CONFIGURATION FILE SYNTAX
 
 The configuration file is in YAML format. Example :
