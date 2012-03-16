@@ -119,3 +119,24 @@ gemapass - Generate & Mail Passwords
 =item -c <conffile>
 
 Where to read password configuration.
+
+=head1 CONFIGURATION FILE SYNTAX
+
+The configuration file is in YAML format. Example :
+
+    from: admin@example.net
+    realm: example.net
+    subject: Your account on example.net
+    bcc: bcc@example.net
+    template: |
+        Hello [% fullname %], here are your credentials on [% realm %] :
+    
+        Username : [% username %]
+        Password : [% password %]
+    users:
+      michel:
+        fullname: 'Michel Demichel'
+        email: 'michel.demichel@example.net'
+      joe:
+        fullname: 'Joe Lagachette'
+        email: 'joe.lagachette@example.net'
