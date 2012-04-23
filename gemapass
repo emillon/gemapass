@@ -94,7 +94,16 @@ sub main {
   mkdir $mail_dirname
     or die "Cannot mkdir $mail_dirname";
 
-  while (my ($username, $user) = each $conf->{'users'}) {
+  my @usernames;
+  my $ulist = $ARGV{'-u'};
+  if (defined $ulist) {
+    @usernames = split (',', $ulist);
+  } else {
+    @usernames = keys $conf->{'users'};
+  }
+
+  for my $username (@usernames) {
+    my $user = $conf->{'users'}{$username};
     &write_mail($conf, $mail_dirname, $username, $user);
   }
 
@@ -110,7 +119,7 @@ gemapass - Generate & Mail Passwords
 
 =head1 USAGE
 
-    gemapass -c conf.yml
+    gemapass -c conf.yml [-u users]
 
 =head1 REQUIRED ARGUMENTS
 
@@ -119,6 +128,17 @@ gemapass - Generate & Mail Passwords
 =item -c <conffile>
 
 Where to read password configuration.
+
+=back
+
+=head1 OPTIONS
+
+=over
+
+=item -u <userlist>
+
+When this option is present, only users in "userlist" (comma-separated) will be
+handled.
 
 =back
 
