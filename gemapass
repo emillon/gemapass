@@ -110,3 +110,55 @@ sub main {
   close HTPASSWD
     or die "Cannot close $htpasswd_filename";
 }
+
+__END__
+
+=head1 NAME
+
+gemapass - Generate & Mail Passwords
+
+=head1 USAGE
+
+    gemapass -c conf.yml [-u users]
+
+=head1 REQUIRED ARGUMENTS
+
+=over
+
+=item -c <conffile>
+
+Where to read password configuration.
+
+=back
+
+=head1 OPTIONS
+
+=over
+
+=item -u <userlist>
+
+When this option is present, only users in "userlist" (comma-separated) will be
+handled.
+
+=back
+
+=head1 CONFIGURATION FILE SYNTAX
+
+The configuration file is in YAML format. Example :
+
+    from: admin@example.net
+    realm: example.net
+    subject: Your account on example.net
+    bcc: bcc@example.net
+    template: |
+        Hello [% fullname %], here are your credentials on [% realm %] :
+    
+        Username : [% username %]
+        Password : [% password %]
+    users:
+      michel:
+        fullname: 'Michel Demichel'
+        email: 'michel.demichel@example.net'
+      joe:
+        fullname: 'Joe Lagachette'
+        email: 'joe.lagachette@example.net'
