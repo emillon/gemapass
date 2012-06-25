@@ -86,7 +86,7 @@ sub main {
   my $conf = LoadFile($ARGV{'-c'});
 
   my $htpasswd_filename = 'htpasswd.out';
-  open HTPASSWD, '>', $htpasswd_filename
+  open HTPASSWD, '>>', $htpasswd_filename
     or die "Cannot open $htpasswd_filename";
 
   my $mail_dirname = 'mail.out';
