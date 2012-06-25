@@ -53,15 +53,41 @@ sub build_body {
   return $data;
 }
 
+sub output_htpasswd_line {
+  my $line = shift;
+  if ($ARGV{'-E'}) {
+    print $line;
+  } else {
+    print HTPASSWD $line;
+  }
+}
+
+sub output_mail {
+  my ($mail_filename, $msg) = @_;
+  if ($ARGV{'-E'}) {
+    print "---\n";
+    print $msg;
+  } else {
+    open MAIL, '>', $mail_filename
+      or die "Cannot open $mail_filename : $!";
+    print MAIL $msg;
+    close MAIL
+      or die "Cannot close $mail_filename";
+  }
+}
+
 sub write_mail {
   my ($conf, $mail_dirname, $username, $user) = @_;
 
   my $template = $conf->{'template'};
 
+  my $realm = $conf->{'realm'};
+
   my $password = &generate_password(10);
   my %params = ( username => $username,
                  fullname => $user->{'fullname'},
                  password => $password,
+                 realm    => $realm,
                );
   my $body = &build_body(\$template, \%params);
   my $msg = &build_mail({ From => $conf->{'from'},
@@ -70,24 +96,22 @@ sub write_mail {
                           Bcc => $conf->{'bcc'},
                         }, $body);
 
-  my $hline = &htdigest_line($username, $conf->{'realm'}, $password);
-  print HTPASSWD $hline;
+  my $hline = &htdigest_line($username, $realm, $password);
+  &output_htpasswd_line ($hline);
 
   my $mail_filename = "$mail_dirname/$username.mail";
 
-  open MAIL, '>', $mail_filename
-    or die "Cannot open $mail_filename : $!";
-  print MAIL $msg;
-  close MAIL
-    or die "Cannot close $mail_filename";
+  &output_mail ($mail_filename, $msg);
 }
 
 sub main {
   my $conf = LoadFile($ARGV{'-c'});
 
   my $htpasswd_filename = 'htpasswd.out';
-  open HTPASSWD, '>>', $htpasswd_filename
-    or die "Cannot open $htpasswd_filename";
+  unless ($ARGV{'-E'}) {
+    open HTPASSWD, '>>', $htpasswd_filename
+      or die "Cannot open $htpasswd_filename";
+  }
 
   my $mail_dirname = 'mail.out';
 
@@ -107,8 +131,10 @@ sub main {
     &write_mail($conf, $mail_dirname, $username, $user);
   }
 
-  close HTPASSWD
-    or die "Cannot close $htpasswd_filename";
+  unless ($ARGV{'-E'}) {
+    close HTPASSWD
+      or die "Cannot close $htpasswd_filename";
+  }
 }
 
 __END__
@@ -139,6 +165,10 @@ Where to read password configuration.
 
 When this option is present, only users in "userlist" (comma-separated) will be
 handled.
+
+=item -E
+
+Output htpasswd and mails to stdout.
 
 =back
 
