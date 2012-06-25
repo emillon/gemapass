@@ -115,8 +115,10 @@ sub main {
 
   my $mail_dirname = 'mail.out';
 
-  mkdir $mail_dirname
-    or die "Cannot mkdir $mail_dirname";
+  unless ($ARGV{'-E'}) {
+    mkdir $mail_dirname
+      or die "Cannot mkdir $mail_dirname";
+  }
 
   my @usernames;
   my $ulist = $ARGV{'-u'};

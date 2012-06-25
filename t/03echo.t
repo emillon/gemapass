@@ -32,7 +32,7 @@ my $gemout = qx#./gemapass -c $conffile -E -u michel#;
 
 is($?, 0, "gemapass could be run with -E");
 ok(not (-e 'htpasswd.out'));
-ok(not (-f 'mail.out'));
+ok(not (-d 'mail.out'));
 
 my $expected_re = 
     qr/
